@@ -55,15 +55,16 @@ end
 %%
 
 %write function for this 
-L = 1801;   %samples            
+L = length(s.right_Cervical);   %samples            
 Fs = 1;     %samples/ms
 f = ((0:L-1) * Fs/L)'; %samples/ms/samples
+
 
 X = fftshift(fft(s.right_Cervical));
 X_norm = X/L;
 
 figure(2)
-subplot(1,2,1);
+subplot(1,2,1)
 plot(f,abs(X_norm),'o'), xlabel('frequency'), ylabel('amplitude')
 yline(.75.*max(abs(X_norm))); 
 subplot(1,2,2)
@@ -76,9 +77,3 @@ for i = 1:length(f)/2
        keep = keep+1;
     end
 end
-
-
-
-    
-
-
