@@ -1,6 +1,6 @@
 clear all, close all
 
-fid = fopen("arms 955.bex");
+fid = fopen ("c2mep1200.bex")
 binar = fread(fid, 'double');
 plot(binar, color = 'b'), xlabel('time (ms)'), ylabel('values')
 hold on
@@ -55,12 +55,12 @@ end
 %%
 
 %write function for this 
-L = length(s.right_Cervical);   %samples            
+L = length(s.left_Cervical);   %samples            
 Fs = 1;     %samples/ms
 f = ((0:L-1) * Fs/L)'; %samples/ms/samples
 
 
-X = fftshift(fft(s.right_Cervical));
+X = fftshift(fft(s.left_Cervical));
 X_norm = X/L;
 
 figure(2)
