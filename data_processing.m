@@ -63,12 +63,47 @@ C2_pat = ["C2", "c2"];
 arms_pat = ["arm", "Arm", "arms","Arms"];
 legs_pat = ["leg", "Leg", "legs", "Legs"];
 
+load("Sample Structure.mat")
+
+String_Time = {};
+failedsorts = [];
+
+for i = 1:length(bexfiles)
+    btemp = bexfiles(i).name;
+    ttemp = txtfiles(i).name;
+    if isempty(regexp(btemp,'\d\d+','match')) ~= 1
+        to_format = char(regexp(btemp,'\d\d+','match'));
+        if length(to_format) == 3
+            to_format = insertBefore(to_format, 1 , '0');
+        end
+        formatted = insertAfter(to_format,length(to_format)-2,':');
+        s_as_cell = struct2cell(s);
+        check_against = vertcat(s_as_cell{1,:});
+            
+   
+        s(i).String_Time = to_format;
+           % s(i).String_Time = to_format;
+
+            %s(i).Time = seconds(duration(s(i).String_Time, 'InputFormat', 'hh:mm')) - ...
+                %seconds(duration(s(1).String_Time, 'InputFormat', 'hh:mm'));
+
+      
+
+    else
+        failedsorts = [failedsorts; btemp];
+    end
+end
+
+
+
+
+%{
+
 %categorize data into MEP, D-wave, SSEP
 holdmep = cell(length(txtfiles),1);
 holdD = cell(length(txtfiles),1);
 holdssep = cell(length(txtfiles),1);
 
-load("Sample Structure.mat");
 for i = 1:length(txtfiles)
     fid = fopen(fullfile(file,txtfiles(i).name));
     meta = textscan(fid,'%s');
@@ -110,8 +145,23 @@ for i = 1:length(String_Time)
         seconds(duration(s(1).String_Time, 'InputFormat', 'hh:mm'));
 end
 
-%sort each trace according to filename, electrode
+% sort each trace according to filename, electrode
+for i = 1:length(holdmep)
+    if ismember(holdmep, failedsorts) ~= 1
+         if  contains(holdmep{i},C1_pat) == 1
+            D_wave_C1{i} = bexfiles(i).name;
+            bexfiles(i).name = [];
+            i = i+1;
+        else
+            D_wave_C2{i} = bexfiles(i).name;
+            bexfiles(i).name = [];
+            i = i+1;
+        end
+    end
+    
+end
 
+%}
 
 
 %%
@@ -139,3 +189,4 @@ for i = 1:length(f)/2
        keep = keep+1;
     end
 end
+
