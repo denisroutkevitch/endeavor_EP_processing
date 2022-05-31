@@ -1,56 +1,118 @@
 clear all, close all
 
-fid = fopen ("c2mep1200.bex")
-binar = fread(fid, 'double');
-plot(binar, color = 'b'), xlabel('time (ms)'), ylabel('values')
-hold on
+file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig_1021');
+bexfiles = dir(fullfile(file,'*.bex'));
+txtfiles = dir(fullfile(file,'*.txt'));
 
-k = 100;
-spoint = 0;
-spointar = [1];
-epoint = 0;
-epointar = [];
-s = struct;
-fields = {'C4_C3', 'left_Cz', 'left_Cervical', 'C3_C4', ...
-    'right_Cz', 'Cz_C4', 'Cz_C3', 'right_Cervical'};
-jump = 1800;
+%{
+C1 = cell(length(bexfiles),1);
+C2 = cell(length(bexfiles),1);
+D_wave_C1 = cell(length(bexfiles),1);
+D_wave_C2 = cell(length(bexfiles),1);
+arms = cell(length(bexfiles),1);
+legs = cell(length(bexfiles),1);
 
-for i = 1:length(binar)-k
-    if binar(i:i+k) == 0
-        if (i+k+1 < length(binar)) && (binar(i+k+1) ~= 0)
-            spoint = i;
-            spointar(end+1)= spoint;
+C1_pat = ["C1", "c1"];
+C2_pat = ["C2", "c2"];
+D_pat = ["D wave", "D Wave"];
+arms_pat = ["arm", "Arm", "arms","Arms"];
+legs_pat = ["leg", "Leg", "legs", "Legs"];
+
+i=1;
+while i <= length(bexfiles)
+    if contains(bexfiles(i).name,D_pat) == 1
+        if  contains(bexfiles(i).name,C1_pat) == 1
+            D_wave_C1{i} = bexfiles(i).name;
+            bexfiles(i).name = [];
+            i = i+1;
+        else
+            D_wave_C2{i} = bexfiles(i).name;
+            bexfiles(i).name = [];
+            i = i+1;
         end
-
+    elseif contains(bexfiles(i).name, C1_pat) == 1
+        C1{i} = bexfiles(i).name;
+        bexfiles(i).name = [];
+        i = i+1;
+    elseif contains(bexfiles(i).name, C2_pat) == 1
+        C2{i} = bexfiles(i).name;
+        bexfiles(i).name = [];
+        i = i+1;
+    elseif contains(bexfiles(i).name, arms_pat) == 1
+        arms{i} = bexfiles(i).name;
+        bexfiles(i).name = [];
+        i = i+1;
+    elseif contains(bexfiles(i).name, legs_pat) == 1
+        legs{i} = bexfiles(i).name;
+        bexfiles(i).name = [];
+        i = i+1;
     end
-    spoint = 0; 
 end
+C1 = C1(~cellfun('isempty',C1));
+C2 = C2(~cellfun('isempty',C2));
+D_wave_C1 = D_wave_C1(~cellfun('isempty',D_wave_C1));
+D_wave_C2 = D_wave_C2(~cellfun('isempty',D_wave_C2));
+arms = arms(~cellfun('isempty',arms));
+legs = legs(~cellfun('isempty',legs));
+%}
+mep = {'LECR', 'RECR', 'LBF', 'RBF', 'LTF', 'RTF'};
+Dwave = {'cau', 'ros'};
+ssep = {'C3', 'C4', 'Cz', 'Cervical'};
+C1_pat = ["C1", "c1"];
+C2_pat = ["C2", "c2"];
+arms_pat = ["arm", "Arm", "arms","Arms"];
+legs_pat = ["leg", "Leg", "legs", "Legs"];
 
-for i = length(binar):-1:1+k
-    if binar(i-k:i) == 0
-        if (i-k-1 > 0) && (binar(i-k-1) ~= 0)
-            epoint = i;
-            epointar(end+1)= epoint;
-        end
+%categorize data into MEP, D-wave, SSEP
+holdmep = cell(length(txtfiles),1);
+holdD = cell(length(txtfiles),1);
+holdssep = cell(length(txtfiles),1);
 
+load("Sample Structure.mat");
+for i = 1:length(txtfiles)
+    fid = fopen(fullfile(file,txtfiles(i).name));
+    meta = textscan(fid,'%s');
+    check = contains(meta{1},mep);
+    if any(check) == 1
+        holdmep{i} = bexfiles(i).name;
     end
-    epoint = 0; 
+    check = contains(meta{1}, Dwave);
+    if any(check) == 1
+        holdD{i} = bexfiles(i).name;
+    end
+    check = contains(meta{1}, ssep);
+    if any(check) == 1
+        holdssep{i} = bexfiles(i).name;
+    end
 end
 
-epointar = flip(epointar);
-realdata = zeros(max(epointar-spointar), length(spointar));
+holdmep = holdmep(~cellfun('isempty',holdmep));
+holdD = holdD(~cellfun('isempty',holdD));
+holdssep = holdssep(~cellfun('isempty',holdssep));
 
-for i= 1:length(spointar)
-    xline(spointar(i));
-    xline(epointar(i));
-    realdata(1:(epointar(i)-spointar(i)+1), i)...
-    = binar(spointar(i):epointar(i));
+%populate main sorting structure with unique timestamps 
+%populate array of data that failed to sort based on filename
+String_Time = {};
+failedsorts = [];
+for i = 1:length(bexfiles)
+    if isempty(regexp(bexfiles(i).name,'\d\d+','match')) ~= 1
+        String_Time{end+1} = char(regexp(bexfiles(i).name,'\d\d+','match'));
+    else
+        failedsorts = [failedsorts; bexfiles(i).name];
+    end
 end
-hold off;
+[~, idx] = unique(str2double(String_Time));
+String_Time = String_Time(idx).';
 
-for i=1:size(realdata,2)
-    s.(char(fields(i))) = realdata(:,i);
+for i = 1:length(String_Time)
+    s(i).String_Time = insertAfter(String_Time{i},length(String_Time{i})-2,':');
+    s(i).Time = seconds(duration(s(i).String_Time, 'InputFormat', 'hh:mm')) - ...
+        seconds(duration(s(1).String_Time, 'InputFormat', 'hh:mm'));
 end
+
+%sort each trace according to filename, electrode
+
+
 
 %%
 
