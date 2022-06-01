@@ -4,57 +4,7 @@ file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','
 bexfiles = dir(fullfile(file,'*.bex'));
 txtfiles = dir(fullfile(file,'*.txt'));
 
-%{
-C1 = cell(length(bexfiles),1);
-C2 = cell(length(bexfiles),1);
-D_wave_C1 = cell(length(bexfiles),1);
-D_wave_C2 = cell(length(bexfiles),1);
-arms = cell(length(bexfiles),1);
-legs = cell(length(bexfiles),1);
-
-C1_pat = ["C1", "c1"];
-C2_pat = ["C2", "c2"];
-D_pat = ["D wave", "D Wave"];
-arms_pat = ["arm", "Arm", "arms","Arms"];
-legs_pat = ["leg", "Leg", "legs", "Legs"];
-
-i=1;
-while i <= length(bexfiles)
-    if contains(bexfiles(i).name,D_pat) == 1
-        if  contains(bexfiles(i).name,C1_pat) == 1
-            D_wave_C1{i} = bexfiles(i).name;
-            bexfiles(i).name = [];
-            i = i+1;
-        else
-            D_wave_C2{i} = bexfiles(i).name;
-            bexfiles(i).name = [];
-            i = i+1;
-        end
-    elseif contains(bexfiles(i).name, C1_pat) == 1
-        C1{i} = bexfiles(i).name;
-        bexfiles(i).name = [];
-        i = i+1;
-    elseif contains(bexfiles(i).name, C2_pat) == 1
-        C2{i} = bexfiles(i).name;
-        bexfiles(i).name = [];
-        i = i+1;
-    elseif contains(bexfiles(i).name, arms_pat) == 1
-        arms{i} = bexfiles(i).name;
-        bexfiles(i).name = [];
-        i = i+1;
-    elseif contains(bexfiles(i).name, legs_pat) == 1
-        legs{i} = bexfiles(i).name;
-        bexfiles(i).name = [];
-        i = i+1;
-    end
-end
-C1 = C1(~cellfun('isempty',C1));
-C2 = C2(~cellfun('isempty',C2));
-D_wave_C1 = D_wave_C1(~cellfun('isempty',D_wave_C1));
-D_wave_C2 = D_wave_C2(~cellfun('isempty',D_wave_C2));
-arms = arms(~cellfun('isempty',arms));
-legs = legs(~cellfun('isempty',legs));
-%}
+%classification identifiers
 mep = {'LECR', 'RECR', 'LBF', 'RBF', 'LTF', 'RTF'};
 Dwave = {'cau', 'ros'};
 ssep = {'C3', 'C4', 'Cz', 'Cervical'};
@@ -66,36 +16,205 @@ legs_pat = ["leg", "Leg", "legs", "Legs"];
 load("Sample Structure.mat")
 
 String_Time = {};
-failedsorts = [];
+failedsorts = {}; %deposit of data files that weren't able to be sorted by algorithm
 
+%sorting data files into structure
 for i = 1:length(bexfiles)
     btemp = bexfiles(i).name;
     ttemp = txtfiles(i).name;
     if isempty(regexp(btemp,'\d\d+','match')) ~= 1
         to_format = char(regexp(btemp,'\d\d+','match'));
-        if length(to_format) == 3
-            to_format = insertBefore(to_format, 1 , '0');
+        if  any(strcmp(to_format, {s.String_Time})) == 0
+            s(end+1).String_Time = to_format;
+            s(end).MEP = s(1).MEP;
+            s(end).D = s(1).D;
+            s(end).SSEP = s(1).SSEP;
         end
-        formatted = insertAfter(to_format,length(to_format)-2,':');
-        s_as_cell = struct2cell(s);
-        check_against = vertcat(s_as_cell{1,:});
-            
-   
-        s(i).String_Time = to_format;
-           % s(i).String_Time = to_format;
 
-            %s(i).Time = seconds(duration(s(i).String_Time, 'InputFormat', 'hh:mm')) - ...
-                %seconds(duration(s(1).String_Time, 'InputFormat', 'hh:mm'));
 
-      
+        fid = fopen(fullfile(file, ttemp));
+        meta = textscan(fid,'%s', 'Delimiter','\n');
+
+        check = contains(meta{1},mep);
+        if any(check) == 1
+            mep_order = {meta{1,1}{1}, meta{1,1}{10},meta{1,1}{19},meta{1,1}{28},...
+                meta{1,1}{37}, meta{1,1}{46}};
+            if contains(btemp,C1_pat) == 1
+                for i = 3:length(s)
+                    if contains(btemp, s(i).String_Time)
+                        try
+                            data = data_grabbing(btemp);
+                            place = find(contains(mep_order, 'LECR'));
+                            s(i).MEP(place).C1 = data(:,1);
+                            place = find(contains(mep_order, 'RECR'));
+                            s(i).MEP(place).C1 = data(:,2);
+                            place = find(contains(mep_order, 'LBF'));
+                            s(i).MEP(place).C1 = data(:,3);
+                            place = find(contains(mep_order, 'RBF'));
+                            s(i).MEP(place).C1 = data(:,4);
+                            place = find(contains(mep_order, 'LTF'));
+                            s(i).MEP(place).C1 = data(:,5);
+                            place = find(contains(mep_order, 'RTF'));
+                            s(i).MEP(place).C1 = data(:,6);
+                            break
+
+                        catch
+                            failedsorts{end+1} = btemp;
+                        end
+                    end
+                end
+            else
+                for i = 3:length(s)
+                    if contains(btemp, s(i).String_Time)
+                        try
+                            data = data_grabbing(btemp);
+                            place = find(contains(mep_order, 'LECR'));
+                            s(i).MEP(place).C2 = data(:,1);
+                            place = find(contains(mep_order, 'RECR'));
+                            s(i).MEP(place).C2 = data(:,2);
+                            place = find(contains(mep_order, 'LBF'));
+                            s(i).MEP(place).C2 = data(:,3);
+                            place = find(contains(mep_order, 'RBF'));
+                            s(i).MEP(place).C2 = data(:,4);
+                            place = find(contains(mep_order, 'LTF'));
+                            s(i).MEP(place).C2 = data(:,5);
+                            place = find(contains(mep_order, 'RTF'));
+                            s(i).MEP(place).C2 = data(:,6);
+                            break
+
+                        catch
+                            failedsorts{end+1} = btemp;
+                        end
+                    end
+                end
+            end
+        end
+        check = contains(meta{1}, Dwave);
+        if any(check) == 1
+            d_order = {meta{1,1}{1}, meta{1,1}{10}};
+            if contains(btemp,C1_pat) == 1
+                for i = 3:length(s)
+                    if contains(btemp, s(i).String_Time)
+                        try
+                            data = data_grabbing(btemp);
+                            place = find(contains(d_order, 'ros'));
+                            s(i).D(place).C1 = data(:,1);
+                            place = find(contains(d_order, 'cau'));
+                            s(i).D(place).C1 = data(:,2);
+                            break
+
+                        catch
+                            failedsorts{end+1} = btemp;
+                        end
+                    end
+                end
+            else
+                for i = 3:length(s)
+                    if contains(btemp, s(i).String_Time)
+                        try
+                            data = data_grabbing(btemp);
+                            place = find(contains(d_order, 'ros'));
+                            s(i).D(place).C2 = data(:,1);
+                            place = find(contains(d_order, 'cau'));
+                            s(i).D(place).C2 = data(:,2);
+                            break
+
+                        catch
+                            failedsorts{end+1} = btemp;
+                        end
+                    end
+                end
+            end
+        end
+
+        check = contains(meta{1}, ssep);
+        if any(check) == 1
+            ssep_order = {meta{1,1}{1}, meta{1,1}{10}, meta{1,1}{19}, meta{1,1}{28}, ...
+                meta{1,1}{37}, meta{1,1}{46}, meta{1,1}{55}, meta{1,1}{64}};
+            if contains(btemp,arms_pat) == 1
+                for i = 3:length(s)
+                    if contains(btemp, s(i).String_Time)
+                        try
+                            data = data_grabbing(btemp);
+                            place = find(contains(ssep_order, 'C4 - C3'));
+                            s(i).SSEP(place).Arms = data(:,1);
+                            place = find(contains(ssep_order, 'C4'));
+                            s(i).SSEP(place).Arms = data(:,2);
+                            place = find(contains(ssep_order, 'Cz'));
+                            s(i).SSEP(place).Arms = data(:,3);
+                            place = find(contains(ssep_order, 'Cervical'));
+                            s(i).SSEP(place).Arms = data(:,4);
+                            place = find(contains(ssep_order, 'C3 - C4'));
+                            s(i).SSEP(place).Arms = data(:,5);
+                            place = find(contains(ssep_order, 'C3'));
+                            s(i).SSEP(place).Arms = data(:,6);
+                            place = find(contains(ssep_order, 'Cz'));
+                            s(i).SSEP(place).Arms = data(:,7);
+                            place = find(contains(ssep_order, 'Cervical'));
+                            s(i).SSEP(place).Arms = data(:,8);
+                            break
+
+                        catch
+                            failedsorts{end+1} = btemp;
+                        end
+                    end
+                end
+            else
+                for i = 3:length(s)
+                    if contains(btemp, s(i).String_Time)
+                        try
+                            data = data_grabbing(btemp);
+                            place = find(contains(ssep_order, 'C4 - C3'));
+                            s(i).SSEP(place).Legs = data(:,1);
+                            place = find(contains(ssep_order, 'Cz'));
+                            s(i).SSEP(place).Legs = data(:,2);
+                            place = find(contains(ssep_order, 'Cervical'));
+                            s(i).SSEP(place).Legs = data(:,3);
+                            place = find(contains(ssep_order, 'C3 - C4'));
+                            s(i).SSEP(place).Legs = data(:,4);
+                            place = find(contains(ssep_order, 'Cz'));
+                            s(i).SSEP(place).Legs = data(:,5);
+                            place = find(contains(ssep_order, 'Cz - C4'));
+                            s(i).SSEP(place).Legs = data(:,6);
+                            place = find(contains(ssep_order, 'Cz - C3'));
+                            s(i).SSEP(place).Legs = data(:,7);
+                            place = find(contains(ssep_order, 'Cervical'));
+                            s(i).SSEP(place).Legs = data(:,8);
+                            break
+
+                        catch
+                            failedsorts{end+1} = btemp;
+                        end
+                    end
+                end
+            end
+        end
 
     else
-        failedsorts = [failedsorts; btemp];
+        failedsorts{end+1} = btemp;
     end
 end
+s(1) = []; s(1) = [];
+T = struct2table(s);
+s = table2struct(natsortrows(T, [],{'String_Time'}));
 
+%fill in Time field
+base = s(1).String_Time;
+if length(s(1).String_Time) == 3
+        base = insertBefore(s(1).String_Time, 1 , '0');
+end
+base = insertAfter(base,length(base)-2,':');
 
-
+for i = 1:length(s)
+    if length(s(i).String_Time) == 3
+        to_format = insertBefore(s(i).String_Time, 1 , '0');
+    else 
+        to_format = s(i).String_Time;
+    end
+    formatted = insertAfter(to_format,length(to_format)-2,':');
+    s(i).Time = seconds(duration(formatted, 'InputFormat', 'hh:mm')) - ...
+        seconds(duration(base, 'InputFormat', 'hh:mm'));
+end
 
 %{
 
