@@ -39,23 +39,45 @@ for i = 1:length(bexfiles)
         if any(check) == 1
             mep_order = {meta{1,1}{1}, meta{1,1}{10},meta{1,1}{19},meta{1,1}{28},...
                 meta{1,1}{37}, meta{1,1}{46}};
+            mep_sensitivity = {meta{1,1}{3}, meta{1,1}{12}, meta{1,1}{21}, meta{1,1}{30}, ...
+                meta{1,1}{39}, meta{1,1}{48}};
             if contains(btemp,C1_pat) == 1
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
                             data = data_grabbing(btemp);
+
                             place = find(contains(mep_order, 'LECR'));
-                            s(i).MEP(place).C1 = data(:,1);
+                            s(i).MEP(1).C1 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(1).C1_sensitivity = sensitivity{1};
+
                             place = find(contains(mep_order, 'RECR'));
-                            s(i).MEP(place).C1 = data(:,2);
+                            s(i).MEP(2).C1 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(2).C1_sensitivity = sensitivity{1};
+
                             place = find(contains(mep_order, 'LBF'));
-                            s(i).MEP(place).C1 = data(:,3);
+                            s(i).MEP(3).C1 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(3).C1_sensitivity = sensitivity{1};
+
                             place = find(contains(mep_order, 'RBF'));
-                            s(i).MEP(place).C1 = data(:,4);
+                            s(i).MEP(4).C1 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(4).C1_sensitivity = sensitivity{1};
+
                             place = find(contains(mep_order, 'LTF'));
-                            s(i).MEP(place).C1 = data(:,5);
+                            s(i).MEP(5).C1 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(5).C1_sensitivity = sensitivity{1};
+
                             place = find(contains(mep_order, 'RTF'));
-                            s(i).MEP(place).C1 = data(:,6);
+                            s(i).MEP(6).C1 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(6).C1_sensitivity = sensitivity{1};
+
+                           
                             break
 
                         catch
@@ -68,18 +90,36 @@ for i = 1:length(bexfiles)
                     if contains(btemp, s(i).String_Time)
                         try
                             data = data_grabbing(btemp);
+                            
                             place = find(contains(mep_order, 'LECR'));
-                            s(i).MEP(place).C2 = data(:,1);
+                            s(i).MEP(1).C2 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(1).C2_sensitivity = sensitivity{1};
+
                             place = find(contains(mep_order, 'RECR'));
-                            s(i).MEP(place).C2 = data(:,2);
+                            s(i).MEP(2).C2 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(2).C2_sensitivity = sensitivity{1};
+
                             place = find(contains(mep_order, 'LBF'));
-                            s(i).MEP(place).C2 = data(:,3);
+                            s(i).MEP(3).C2 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(3).C2_sensitivity = sensitivity{1};
+
                             place = find(contains(mep_order, 'RBF'));
-                            s(i).MEP(place).C2 = data(:,4);
+                            s(i).MEP(4).C2 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(4).C2_sensitivity = sensitivity{1};    
+
                             place = find(contains(mep_order, 'LTF'));
-                            s(i).MEP(place).C2 = data(:,5);
+                            s(i).MEP(5).C2 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(5).C2_sensitivity = sensitivity{1};
+
                             place = find(contains(mep_order, 'RTF'));
-                            s(i).MEP(place).C2 = data(:,6);
+                            s(i).MEP(6).C2 = data(:,place);
+                            sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).MEP(6).C2_sensitivity = sensitivity{1};
                             break
 
                         catch
@@ -92,15 +132,22 @@ for i = 1:length(bexfiles)
         check = contains(meta{1}, Dwave);
         if any(check) == 1
             d_order = {meta{1,1}{1}, meta{1,1}{10}};
+            d_sensitivity = {meta{1,1}{3}, meta{1,1}{12}};
             if contains(btemp,C1_pat) == 1
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
                             data = data_grabbing(btemp);
+
                             place = find(contains(d_order, 'ros'));
-                            s(i).D(place).C1 = data(:,1);
+                            s(i).D(1).C1 = data(:,place);
+                            sensitivity = regexp(d_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).D(1).C1_sensitivity = sensitivity{1};
+
                             place = find(contains(d_order, 'cau'));
-                            s(i).D(place).C1 = data(:,2);
+                            s(i).D(2).C1 = data(:,place);
+                            sensitivity = regexp(d_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).D(2).C1_sensitivity = sensitivity{1};
                             break
 
                         catch
@@ -113,10 +160,16 @@ for i = 1:length(bexfiles)
                     if contains(btemp, s(i).String_Time)
                         try
                             data = data_grabbing(btemp);
+
                             place = find(contains(d_order, 'ros'));
-                            s(i).D(place).C2 = data(:,1);
+                            s(i).D(1).C2 = data(:,place);
+                            sensitivity = regexp(d_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).D(1).C2_sensitivity = sensitivity{1};
+
                             place = find(contains(d_order, 'cau'));
-                            s(i).D(place).C2 = data(:,2);
+                            s(i).D(2).C2 = data(:,place);
+                            sensitivity = regexp(d_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).D(2).C2_sensitivity = sensitivity{1};
                             break
 
                         catch
@@ -131,28 +184,50 @@ for i = 1:length(bexfiles)
         if any(check) == 1
             ssep_order = {meta{1,1}{1}, meta{1,1}{10}, meta{1,1}{19}, meta{1,1}{28}, ...
                 meta{1,1}{37}, meta{1,1}{46}, meta{1,1}{55}, meta{1,1}{64}};
+            ssep_sensitivity = {meta{1,1}{3}, meta{1,1}{12}, meta{1,1}{21}, meta{1,1}{30}, ...
+                meta{1,1}{39}, meta{1,1}{48}, meta{1,1}{57}, meta{1,1}{66}};
             if contains(btemp,arms_pat) == 1
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
                             data = data_grabbing(btemp);
-                            place = find(contains(ssep_order, 'C4 - C3'));
-                            s(i).SSEP(place).Arms = data(:,1);
-                            place = find(contains(ssep_order, 'C4'));
-                            s(i).SSEP(place).Arms = data(:,2);
+
+                            place = find(contains(ssep_order, "C4 - C3'"));
+                            s(i).SSEP(1).Arms = data(:,place);
+                            sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(1).Arms_sensitivity = sensitivity{1};
+
+                            place = find(contains(ssep_order, 'C4') & ~contains(ssep_order, "C4 - C3'") & ~contains(ssep_order, "C3' - C4"));
+                            s(i).SSEP(2).Arms = data(:,place);
+                            sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(2).Arms_sensitivity = sensitivity{1};
+
                             place = find(contains(ssep_order, 'Cz'));
-                            s(i).SSEP(place).Arms = data(:,3);
-                            place = find(contains(ssep_order, 'Cervical'));
-                            s(i).SSEP(place).Arms = data(:,4);
-                            place = find(contains(ssep_order, 'C3 - C4'));
-                            s(i).SSEP(place).Arms = data(:,5);
-                            place = find(contains(ssep_order, 'C3'));
-                            s(i).SSEP(place).Arms = data(:,6);
-                            place = find(contains(ssep_order, 'Cz'));
-                            s(i).SSEP(place).Arms = data(:,7);
-                            place = find(contains(ssep_order, 'Cervical'));
-                            s(i).SSEP(place).Arms = data(:,8);
-                            break
+                            s(i).SSEP(3).Arms = data(:,place(1));
+                            sensitivity = regexp(ssep_sensitivity{place(1)}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(3).Arms_sensitivity = sensitivity{1};
+                            s(i).SSEP(7).Arms = data(:,place(2));
+                            sensitivity = regexp(ssep_sensitivity{place(2)}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(7).Arms_sensitivity = sensitivity{1};
+
+                            place = find(contains(ssep_order, 'Cervical'));                       
+                            s(i).SSEP(4).Arms = data(:,place(1));
+                            sensitivity = regexp(ssep_sensitivity{place(1)}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(4).Arms_sensitivity = sensitivity{1};
+                            s(i).SSEP(8).Arms = data(:,place(2));
+                            sensitivity = regexp(ssep_sensitivity{place(2)}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(8).Arms_sensitivity = sensitivity{1};
+
+                            place = find(contains(ssep_order, "C3' - C4"));
+                            s(i).SSEP(5).Arms = data(:,place);
+                            sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(5).Arms_sensitivity = sensitivity{1};
+
+                            place = find(contains(ssep_order, "C3'") & ~contains(ssep_order, "C4 - C3'") & ~contains(ssep_order, "C3' - C4"));
+                            s(i).SSEP(6).Arms = data(:,place);
+                            sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(6).Arms_sensitivity = sensitivity{1};
+                         break
 
                         catch
                             failedsorts{end+1} = btemp;
@@ -164,22 +239,42 @@ for i = 1:length(bexfiles)
                     if contains(btemp, s(i).String_Time)
                         try
                             data = data_grabbing(btemp);
-                            place = find(contains(ssep_order, 'C4 - C3'));
-                            s(i).SSEP(place).Legs = data(:,1);
-                            place = find(contains(ssep_order, 'Cz'));
-                            s(i).SSEP(place).Legs = data(:,2);
+
+                            place = find(contains(ssep_order, "C4 - C3'"));
+                            s(i).SSEP(1).Legs = data(:,place);
+                            sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(1).Legs_sensitivity = sensitivity{1};
+
+                            place = find(contains(ssep_order, 'Cz') & ~contains(ssep_order, 'Cz - C4') & ~contains(ssep_order, "Cz - C3'"));
+                            s(i).SSEP(3).Legs = data(:,place(1));
+                            sensitivity = regexp(ssep_sensitivity{place(1)}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(3).Legs_sensitivity = sensitivity{1};
+                            s(i).SSEP(7).Legs = data(:,place(2));
+                            sensitivity = regexp(ssep_sensitivity{place(2)}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(7).Legs_sensitivity = sensitivity{1};
+                            
                             place = find(contains(ssep_order, 'Cervical'));
-                            s(i).SSEP(place).Legs = data(:,3);
-                            place = find(contains(ssep_order, 'C3 - C4'));
-                            s(i).SSEP(place).Legs = data(:,4);
-                            place = find(contains(ssep_order, 'Cz'));
-                            s(i).SSEP(place).Legs = data(:,5);
+                            s(i).SSEP(4).Legs = data(:,place(1));
+                            sensitivity = regexp(ssep_sensitivity{place(2)}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(4).Legs_sensitivity = sensitivity{1};
+                            s(i).SSEP(8).Legs = data(:,place(2));
+                            sensitivity = regexp(ssep_sensitivity{place(2)}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(8).Legs_sensitivity = sensitivity{1};
+                            
+                            place = find(contains(ssep_order, "C3' - C4"));
+                            s(i).SSEP(5).Legs = data(:,place);
+                            sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(5).Legs_sensitivity = sensitivity{1};
+                            
                             place = find(contains(ssep_order, 'Cz - C4'));
-                            s(i).SSEP(place).Legs = data(:,6);
+                            s(i).SSEP(2).Legs = data(:,place);
+                            sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(2).Legs_sensitivity = sensitivity{1};
+                            
                             place = find(contains(ssep_order, 'Cz - C3'));
-                            s(i).SSEP(place).Legs = data(:,7);
-                            place = find(contains(ssep_order, 'Cervical'));
-                            s(i).SSEP(place).Legs = data(:,8);
+                            s(i).SSEP(6).Legs = data(:,place);
+                            sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
+                            s(i).SSEP(6).Legs_sensitivity = sensitivity{1};
                             break
 
                         catch
@@ -198,17 +293,17 @@ s(1) = []; s(1) = [];
 T = struct2table(s);
 s = table2struct(natsortrows(T, [],{'String_Time'}));
 
-%fill in Time field
-base = s(1).String_Time;
 if length(s(1).String_Time) == 3
-        base = insertBefore(s(1).String_Time, 1 , '0');
+    base = insertBefore(s(1).String_Time, 1 , '0');
 end
-base = insertAfter(base,length(base)-2,':');
+base = insertAfter(s(1).String_Time,length(s(1).String_Time)-2,':');
+
+%fill in Time field
 
 for i = 1:length(s)
     if length(s(i).String_Time) == 3
         to_format = insertBefore(s(i).String_Time, 1 , '0');
-    else 
+    else
         to_format = s(i).String_Time;
     end
     formatted = insertAfter(to_format,length(to_format)-2,':');
