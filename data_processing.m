@@ -1,6 +1,8 @@
 clear all, close all
 
-file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig_1021');
+% file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig_1021');
+file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
+
 bexfiles = dir(fullfile(file,'*.bex'));
 txtfiles = dir(fullfile(file,'*.txt'));
 
@@ -26,14 +28,18 @@ for i = 1:length(bexfiles)
         to_format = char(regexp(btemp,'\d\d+','match'));
         if  any(strcmp(to_format, {s.String_Time})) == 0
             s(end+1).String_Time = to_format;
-            s(end).MEP = s(1).MEP;
-            s(end).D = s(1).D;
-            s(end).SSEP = s(1).SSEP;
+%             s(end).MEP = s(1).MEP;
+%             s(end).D = s(1).D;
+%             s(end).SSEP = s(1).SSEP;
+            s(end).MEP = [];
+            s(end).D = [];
+            s(end).SSEP = [];
         end
 
 
         fid = fopen(fullfile(file, ttemp));
         meta = textscan(fid,'%s', 'Delimiter','\n');
+        fclose(fid);
 
         check = contains(meta{1},mep);
         if any(check) == 1
@@ -44,8 +50,13 @@ for i = 1:length(bexfiles)
             if contains(btemp,C1_pat) == 1
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
+                        
                         try
-                            data = data_grabbing(btemp);
+                            data = data_grabbing(fullfile(file, btemp));
+
+                            if isempty(s(i).MEP)
+                                s(i).MEP = s(1).MEP;
+                            end
 
                             place = find(contains(mep_order, 'LECR'));
                             s(i).MEP(1).C1 = data(:,place);
@@ -89,8 +100,12 @@ for i = 1:length(bexfiles)
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
-                            data = data_grabbing(btemp);
-                            
+                            data = data_grabbing(fullfile(file, btemp));
+
+                            if isempty(s(i).MEP)
+                                s(i).MEP = s(1).MEP;
+                            end
+
                             place = find(contains(mep_order, 'LECR'));
                             s(i).MEP(1).C2 = data(:,place);
                             sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
@@ -137,7 +152,11 @@ for i = 1:length(bexfiles)
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
-                            data = data_grabbing(btemp);
+                            data = data_grabbing(fullfile(file, btemp));
+
+                            if isempty(s(i).D)
+                                s(i).D = s(1).D;
+                            end
 
                             place = find(contains(d_order, 'ros'));
                             s(i).D(1).C1 = data(:,place);
@@ -159,7 +178,11 @@ for i = 1:length(bexfiles)
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
-                            data = data_grabbing(btemp);
+                            data = data_grabbing(fullfile(file, btemp));
+
+                            if isempty(s(i).D)
+                                s(i).D = s(1).D;
+                            end
 
                             place = find(contains(d_order, 'ros'));
                             s(i).D(1).C2 = data(:,place);
@@ -190,7 +213,11 @@ for i = 1:length(bexfiles)
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
-                            data = data_grabbing(btemp);
+                            data = data_grabbing(fullfile(file, btemp));
+
+                            if isempty(s(i).SSEP)
+                                s(i).SSEP = s(1).SSEP;
+                            end
 
                             place = find(contains(ssep_order, "C4 - C3'"));
                             s(i).SSEP(1).Arms = data(:,place);
@@ -238,7 +265,11 @@ for i = 1:length(bexfiles)
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
-                            data = data_grabbing(btemp);
+                            data = data_grabbing(fullfile(file, btemp));
+
+                            if isempty(s(i).SSEP)
+                                s(i).SSEP = s(1).SSEP;
+                            end
 
                             place = find(contains(ssep_order, "C4 - C3'"));
                             s(i).SSEP(1).Legs = data(:,place);
