@@ -1,6 +1,6 @@
 function realdata = data_grabbing(f)
-    root = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig_1021');
-    fid = fopen(fullfile(root,f));
+%     root = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig_1021');
+    fid = fopen(f);
     binar = fread(fid, 'double');
     %plot(binar, color = 'b'), xlabel('time (ms)'), ylabel('values')
     %hold on
@@ -35,7 +35,7 @@ function realdata = data_grabbing(f)
     end
     
     epointar = flip(epointar);
-
+    
     %populate realdata array with nonzero values of each trace
     realdata = zeros(max(epointar-spointar), length(spointar));
     for i= 1:length(spointar)
@@ -45,5 +45,7 @@ function realdata = data_grabbing(f)
             = binar(spointar(i):epointar(i));
     end
     %hold off;
+
+    fclose(fid);
 end
 
