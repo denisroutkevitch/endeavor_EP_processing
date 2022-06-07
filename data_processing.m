@@ -1,7 +1,7 @@
 clear all, close all
 
-% file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig_1021');
-file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
+ file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig_1021');
+%file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
 
 bexfiles = dir(fullfile(file,'*.bex'));
 txtfiles = dir(fullfile(file,'*.txt'));
@@ -28,9 +28,6 @@ for i = 1:length(bexfiles)
         to_format = char(regexp(btemp,'\d\d+','match'));
         if  any(strcmp(to_format, {s.String_Time})) == 0
             s(end+1).String_Time = to_format;
-%             s(end).MEP = s(1).MEP;
-%             s(end).D = s(1).D;
-%             s(end).SSEP = s(1).SSEP;
             s(end).MEP = [];
             s(end).D = [];
             s(end).SSEP = [];
@@ -86,9 +83,7 @@ for i = 1:length(bexfiles)
                             place = find(contains(mep_order, 'RTF'));
                             s(i).MEP(6).C1 = data(:,place);
                             sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
-                            s(i).MEP(6).C1_sensitivity = sensitivity{1};
-
-                           
+                            s(i).MEP(6).C1_sensitivity = sensitivity{1};                           
                             break
 
                         catch
@@ -342,96 +337,27 @@ for i = 1:length(s)
         seconds(duration(base, 'InputFormat', 'hh:mm'));
 end
 
-%{
-
-%categorize data into MEP, D-wave, SSEP
-holdmep = cell(length(txtfiles),1);
-holdD = cell(length(txtfiles),1);
-holdssep = cell(length(txtfiles),1);
-
-for i = 1:length(txtfiles)
-    fid = fopen(fullfile(file,txtfiles(i).name));
-    meta = textscan(fid,'%s');
-    check = contains(meta{1},mep);
-    if any(check) == 1
-        holdmep{i} = bexfiles(i).name;
-    end
-    check = contains(meta{1}, Dwave);
-    if any(check) == 1
-        holdD{i} = bexfiles(i).name;
-    end
-    check = contains(meta{1}, ssep);
-    if any(check) == 1
-        holdssep{i} = bexfiles(i).name;
-    end
-end
-
-holdmep = holdmep(~cellfun('isempty',holdmep));
-holdD = holdD(~cellfun('isempty',holdD));
-holdssep = holdssep(~cellfun('isempty',holdssep));
-
-%populate main sorting structure with unique timestamps 
-%populate array of data that failed to sort based on filename
-String_Time = {};
-failedsorts = [];
-for i = 1:length(bexfiles)
-    if isempty(regexp(bexfiles(i).name,'\d\d+','match')) ~= 1
-        String_Time{end+1} = char(regexp(bexfiles(i).name,'\d\d+','match'));
-    else
-        failedsorts = [failedsorts; bexfiles(i).name];
-    end
-end
-[~, idx] = unique(str2double(String_Time));
-String_Time = String_Time(idx).';
-
-for i = 1:length(String_Time)
-    s(i).String_Time = insertAfter(String_Time{i},length(String_Time{i})-2,':');
-    s(i).Time = seconds(duration(s(i).String_Time, 'InputFormat', 'hh:mm')) - ...
-        seconds(duration(s(1).String_Time, 'InputFormat', 'hh:mm'));
-end
-
-% sort each trace according to filename, electrode
-for i = 1:length(holdmep)
-    if ismember(holdmep, failedsorts) ~= 1
-         if  contains(holdmep{i},C1_pat) == 1
-            D_wave_C1{i} = bexfiles(i).name;
-            bexfiles(i).name = [];
-            i = i+1;
-        else
-            D_wave_C2{i} = bexfiles(i).name;
-            bexfiles(i).name = [];
-            i = i+1;
-        end
-    end
-    
-end
-
-%}
+%% preliminary analysis
 
 
-%%
+trace = s(1).MEP(4).C2;
+ntrace = -1 + 2.*(trace - min(trace)) ./ (max(trace) - min(trace));
 
-%write function for this 
-L = length(s.left_Cervical);   %samples            
-Fs = 1;     %samples/ms
-f = ((0:L-1) * Fs/L)'; %samples/ms/samples
+%filter normalized traces
+%ntrace = sgolayfilt(ntrace, 3, 11);
 
 
-X = fftshift(fft(s.left_Cervical));
-X_norm = X/L;
-
+%detect stimulation peaks
+figure(1)
+plot(ntrace); hold on;
+diffs  = abs(diff(ntrace)); 
+[~,locs]= findpeaks(diffs, 'MinPeakHeight', .3);
+findpeaks(diffs, 'MinPeakHeight', .3); hold off;
+response = ntrace(locs(end)+4 : end);
 figure(2)
-subplot(1,2,1)
-plot(f,abs(X_norm),'o'), xlabel('frequency'), ylabel('amplitude')
-yline(.75.*max(abs(X_norm))); 
-subplot(1,2,2)
-plot(f,angle(X_norm),'o'), xlabel('frequency'), ylabel('phase angle')
+plot(response);
 
-X_recon = X;
-keep = 0;
-for i = 1:length(f)/2
-    if abs(X_norm) > .75.*max(abs(X_norm))
-       keep = keep+1;
-    end
-end
+
+
+
 
