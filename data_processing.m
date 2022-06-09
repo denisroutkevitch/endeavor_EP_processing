@@ -337,25 +337,88 @@ for i = 1:length(s)
         seconds(duration(base, 'InputFormat', 'hh:mm'));
 end
 
+
+%% MEPs stacking
+
+close all
+hold on
+traces = [];
+times = {};
+
+for i = 1:length(s)
+    if (isempty(s(i).MEP) == 0) && (isempty(s(i).MEP(1).C1) == 0)
+        traces(:,end+1) = s(i).MEP(1).C1;
+        times{end+1} = s(i).String_Time;
+    end
+end
+
+for i = 1:length(times)
+    if length(times{i}) == 3
+        to_format = insertBefore(times{i}, 1 , '0');
+    else
+        to_format = times{i};
+    end
+    formatted = insertAfter(to_format,length(to_format)-2,':');
+    times{i} = datestr(duration(formatted, 'InputFormat', 'hh:mm'), 'HH:MM');
+end
+
+for i = 1: size(traces,2) - 1
+    dist = min(traces(:,i)) - max(traces(:,i+1));
+    traces(:,i+1) = traces(:,i+1) + dist - 2000;
+end
+
+
+t = 0:100/max(size(traces,1)): 99.99;
+plot(t, traces, 'Color', 'Black', 'LineWidth', .8)
+xlabel('Time (ms)')
+ylabel('Time of measurement')
+ylim([min(min(traces))-2000, max(max(traces))+2000])
+yticks(flip(traces(1,:)))
+yticklabels(flip(times))
+set(gca,'FontSize', 13);
+title({'MEP signal traces measured at different timepoints', 'during porcine spinal cord surgery'})
+subtitle('Measured from the left extensor carpi radialis (LECR)')
+hold off 
+
+
+
 %% preliminary analysis
 
-
-trace = s(1).MEP(4).C2;
+trace = s(10).MEP(6).C1;
+t = 0:100/length(trace): 99.99;
 ntrace = -1 + 2.*(trace - min(trace)) ./ (max(trace) - min(trace));
 
 %filter normalized traces
-%ntrace = sgolayfilt(ntrace, 3, 11);
 
+%[y,z] = butter(5, .125);
+Fs = length(ntrace)/.1;
+d = designfilt('bandstopiir','FilterOrder',20, ...
+               'HalfPowerFrequency1',50,'HalfPowerFrequency2',70, ...
+               'DesignMethod','butter','SampleRate',Fs);
+% ntrace = filtfilt(d,ntrace);
+% ntrace = filtfilt(d,ntrace);
 
-%detect stimulation peaks
 figure(1)
-plot(ntrace); hold on;
-diffs  = abs(diff(ntrace)); 
-[~,locs]= findpeaks(diffs, 'MinPeakHeight', .3);
-findpeaks(diffs, 'MinPeakHeight', .3); hold off;
-response = ntrace(locs(end)+4 : end);
-figure(2)
-plot(response);
+plot(t,ntrace), xlabel = 'Time (ms)';
+m = min(ntrace);
+M = max(ntrace);
+% diffs  = abs(diff(ntrace)); 
+% [~,locs]= findpeaks(diffs, 'MinPeakHeight', .3);
+% findpeaks(diffs, 'MinPeakHeight', .3); hold off;
+% response = ntrace(locs(end)+4 : end);
+%figure(2)
+%plot(t(locs(end)+4 : end),response), xlabel = 'Time (ms)';
+
+figure(3)
+a = fft(ntrace);
+f = Fs*(0:(length(ntrace)/2))/length(ntrace);
+plot(f,abs(a(1:ceil(length(a)/2))));
+idx = find(a == min(abs(a-60)));
+a(1:2)=0;
+ntrace = ifft(a);
+
+figure(4);
+plot(t,ntrace);
 
 
 
