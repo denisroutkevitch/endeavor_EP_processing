@@ -345,9 +345,9 @@ hold on
 traces = [];
 times = {};
 
-for i = 1:length(s)
-    if (isempty(s(i).MEP) == 0) && (isempty(s(i).MEP(1).C1) == 0)
-        traces(:,end+1) = s(i).MEP(1).C1;
+for i = 10:length(s)
+    if (isempty(s(i).MEP) == 0) && (isempty(s(i).MEP(6).C1) == 0)
+        traces(:,end+1) = s(i).MEP(6).C1;
         times{end+1} = s(i).String_Time;
     end
 end
@@ -364,22 +364,57 @@ end
 
 for i = 1: size(traces,2) - 1
     dist = min(traces(:,i)) - max(traces(:,i+1));
-    traces(:,i+1) = traces(:,i+1) + dist - 2000;
+    traces(:,i+1) = traces(:,i+1) + dist - 50;
 end
 
 
 t = 0:100/max(size(traces,1)): 99.99;
-plot(t, traces, 'Color', 'Black', 'LineWidth', .8)
-xlabel('Time (ms)')
-ylabel('Time of measurement')
-ylim([min(min(traces))-2000, max(max(traces))+2000])
+plot(t, traces, 'Color', 'Black', 'LineWidth', 1.7)
+xlabel('Time (ms)','FontWeight', 'bold')
+ylabel('Time of measurement','FontWeight','bold')
+ylim([min(min(traces))-100, max(max(traces))+100])
+xlim([40, 90])
 yticks(flip(traces(1,:)))
 yticklabels(flip(times))
 set(gca,'FontSize', 13);
-title({'MEP signal traces measured at different timepoints', 'during porcine spinal cord surgery'})
-subtitle('Measured from the left extensor carpi radialis (LECR)')
+title({'MEP signal traces measured from the', 'left extensor carpi radialis (LECR)'})
+set(gcf,'Position',[0 0 300 300])
+
 hold off 
 
+
+%% min/max analysis
+
+
+post_stim = floor(max(size(traces,1)) * .6);
+dist = [];
+figure(1)
+%select correct data for analysis
+hold on
+
+for i = 1:size(traces,2)
+    [Mpks, ~] = findpeaks(traces(post_stim : end,i),'MinPeakDistance', 50);
+    M = max(Mpks);
+    plot(t(find(traces(:,i) == M)), M, 'r*')
+    [mpks, ~] = findpeaks(-traces(post_stim : end,i),'MinPeakDistance', 50);
+    m = max(mpks);
+    plot(t(find(traces(:,i) == -m)), -m, 'r*')
+    dist(end+1) = M + m;
+end
+hold off
+
+figure(2)
+cats = categorical(times);
+b = bar(cats,dist,'FaceColor', 'flat');
+ylabel('Max - Min voltage (mV)', 'FontWeight', 'bold')
+xlabel('Time of measurement','FontWeight','bold')
+xtips = b(1).XEndPoints;
+ytips = b(1).YEndPoints;
+labels = string(round(b(1).YData, 2));
+text(xtips,ytips,labels,'HorizontalAlignment','center','VerticalAlignment','bottom')
+xticklabels(times)
+set(gca,'FontSize', 13)
+title({'Maximum peak-to-trough amplitudes', 'Measured at left extensor carpi radialis (LECR)'})
 
 
 %% preliminary analysis
