@@ -1,6 +1,6 @@
 clear all, close all
 
- file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig_1021');
+ file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig 1111');
 %file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
 
 bexfiles = dir(fullfile(file,'*.bex'));
@@ -8,12 +8,12 @@ txtfiles = dir(fullfile(file,'*.txt'));
 
 %classification identifiers
 mep = {'LECR', 'RECR', 'LBF', 'RBF', 'LTF', 'RTF'};
-Dwave = {'cau', 'ros'};
+Dwave = {'cau', 'ros', 'Cau', 'Ros'};
 ssep = {'C3', 'C4', 'Cz', 'Cervical'};
 C1_pat = ["C1", "c1"];
 C2_pat = ["C2", "c2"];
-arms_pat = ["arm", "Arm", "arms","Arms"];
-legs_pat = ["leg", "Leg", "legs", "Legs"];
+arms_pat = ["arm", "Arm", "arms", "Arms", "median", "Median"];
+legs_pat = ["leg", "Leg", "legs", "Legs", "tibial", "Tibial"];
 
 load("Sample Structure.mat")
 
@@ -21,12 +21,12 @@ String_Time = {};
 failedsorts = {}; %deposit of data files that weren't able to be sorted by algorithm
 
 %sorting data files into structure
-for i = 1:length(bexfiles)
+for i = 1:min(length(bexfiles),length(txtfiles))
     btemp = bexfiles(i).name;
     ttemp = txtfiles(i).name;
     if isempty(regexp(btemp,'\d\d+','match')) ~= 1
         to_format = char(regexp(btemp,'\d\d+','match'));
-        if  any(strcmp(to_format, {s.String_Time})) == 0
+        if any(strcmp(to_format, {s.String_Time})) == 0
             s(end+1).String_Time = to_format;
             s(end).MEP = [];
             s(end).D = [];
@@ -47,7 +47,7 @@ for i = 1:length(bexfiles)
             if contains(btemp,C1_pat) == 1
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
-                        
+
                         try
                             data = data_grabbing(fullfile(file, btemp));
 
@@ -83,7 +83,7 @@ for i = 1:length(bexfiles)
                             place = find(contains(mep_order, 'RTF'));
                             s(i).MEP(6).C1 = data(:,place);
                             sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
-                            s(i).MEP(6).C1_sensitivity = sensitivity{1};                           
+                            s(i).MEP(6).C1_sensitivity = sensitivity{1};
                             break
 
                         catch
@@ -91,7 +91,7 @@ for i = 1:length(bexfiles)
                         end
                     end
                 end
-            else
+            elseif contains(btemp,C2_pat) == 1
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
@@ -119,7 +119,7 @@ for i = 1:length(bexfiles)
                             place = find(contains(mep_order, 'RBF'));
                             s(i).MEP(4).C2 = data(:,place);
                             sensitivity = regexp(mep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
-                            s(i).MEP(4).C2_sensitivity = sensitivity{1};    
+                            s(i).MEP(4).C2_sensitivity = sensitivity{1};
 
                             place = find(contains(mep_order, 'LTF'));
                             s(i).MEP(5).C2 = data(:,place);
@@ -137,6 +137,8 @@ for i = 1:length(bexfiles)
                         end
                     end
                 end
+            else
+                failedsorts{end+1} = btemp;
             end
         end
         check = contains(meta{1}, Dwave);
@@ -169,7 +171,7 @@ for i = 1:length(bexfiles)
                         end
                     end
                 end
-            else
+            elseif contains(btemp,C2_pat) == 1
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
@@ -195,6 +197,8 @@ for i = 1:length(bexfiles)
                         end
                     end
                 end
+            else
+                failedsorts{end+1} = btemp;
             end
         end
 
@@ -232,7 +236,7 @@ for i = 1:length(bexfiles)
                             sensitivity = regexp(ssep_sensitivity{place(2)}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).SSEP(7).Arms_sensitivity = sensitivity{1};
 
-                            place = find(contains(ssep_order, 'Cervical'));                       
+                            place = find(contains(ssep_order, 'Cervical'));
                             s(i).SSEP(4).Arms = data(:,place(1));
                             sensitivity = regexp(ssep_sensitivity{place(1)}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).SSEP(4).Arms_sensitivity = sensitivity{1};
@@ -249,14 +253,14 @@ for i = 1:length(bexfiles)
                             s(i).SSEP(6).Arms = data(:,place);
                             sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).SSEP(6).Arms_sensitivity = sensitivity{1};
-                         break
+                            break
 
                         catch
                             failedsorts{end+1} = btemp;
                         end
                     end
                 end
-            else
+            elseif contains(btemp,legs_pat) == 1
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
@@ -278,7 +282,7 @@ for i = 1:length(bexfiles)
                             s(i).SSEP(7).Legs = data(:,place(2));
                             sensitivity = regexp(ssep_sensitivity{place(2)}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).SSEP(7).Legs_sensitivity = sensitivity{1};
-                            
+
                             place = find(contains(ssep_order, 'Cervical'));
                             s(i).SSEP(4).Legs = data(:,place(1));
                             sensitivity = regexp(ssep_sensitivity{place(2)}, 'Sensitivity:(\d+\s*\D+)','tokens');
@@ -286,17 +290,17 @@ for i = 1:length(bexfiles)
                             s(i).SSEP(8).Legs = data(:,place(2));
                             sensitivity = regexp(ssep_sensitivity{place(2)}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).SSEP(8).Legs_sensitivity = sensitivity{1};
-                            
+
                             place = find(contains(ssep_order, "C3' - C4"));
                             s(i).SSEP(5).Legs = data(:,place);
                             sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).SSEP(5).Legs_sensitivity = sensitivity{1};
-                            
+
                             place = find(contains(ssep_order, 'Cz - C4'));
                             s(i).SSEP(2).Legs = data(:,place);
                             sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).SSEP(2).Legs_sensitivity = sensitivity{1};
-                            
+
                             place = find(contains(ssep_order, 'Cz - C3'));
                             s(i).SSEP(6).Legs = data(:,place);
                             sensitivity = regexp(ssep_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
@@ -308,7 +312,10 @@ for i = 1:length(bexfiles)
                         end
                     end
                 end
+            else
+                failedsorts{end+1} = btemp;
             end
+
         end
 
     else
@@ -404,13 +411,16 @@ end
 hold off
 
 figure(2)
+dist = (dist-min(dist)) ./ (max(dist)-min(dist));
 cats = categorical(times);
 b = bar(cats,dist,'FaceColor', 'flat');
-ylabel('Max - Min voltage (mV)', 'FontWeight', 'bold')
+
+ylabel('Normalized Max - Min voltage (mV)', 'FontWeight', 'bold')
 xlabel('Time of measurement','FontWeight','bold')
-xtips = b(1).XEndPoints;
-ytips = b(1).YEndPoints;
-labels = string(round(b(1).YData, 2));
+ylim([0 1.1])
+xtips = b.XEndPoints;
+ytips = b.YEndPoints;
+labels = string(round(b.YData, 2));
 text(xtips,ytips,labels,'HorizontalAlignment','center','VerticalAlignment','bottom')
 xticklabels(times)
 set(gca,'FontSize', 13)
