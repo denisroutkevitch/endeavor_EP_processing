@@ -32,7 +32,7 @@ labels = string(round(b.YData, 2));
 text(xtips,ytips,labels,'HorizontalAlignment','center','VerticalAlignment','bottom')
 xticklabels(times)
 set(gca,'FontSize', 13)
-title({'Maximum peak-to-trough amplitudes', 'Measured at left extensor carpi radialis (LECR)'})
+title({'Maximum peak-to-trough amplitudes', 'Measured at right tibialis flexor (RTF)'})
 
 drop = find(dist == min(dist));
 
@@ -46,21 +46,25 @@ else
     drop_range = [drop_range;dist(drop - 1), dist(drop), dist(drop + 1)];
 end
 
-
+%%
 figure(3);
-cats = categorical({'Pre-Drop', 'Drop', 'Post-Drop'});
-cats = reordercats(cats,{'Pre-Drop', 'Drop', 'Post-Drop'});
-b = bar(cats,drop_range);
+cats = categorical({'Pig 1 (9/30)', 'Pig 2 (10/14)', 'Pig 3 (10/21)', 'Pig 4 (11/4)'});
+cats = reordercats(cats,{'Pig 1 (9/30)', 'Pig 2 (10/14)', 'Pig 3 (10/21)', 'Pig 4 (11/4)'});
+    
+plot_range = drop_range';
+
+plot_range = plot_range ./ plot_range(1,:);
+
+
+h = bar(cats, plot_range', 'BarWidth', 1);
 
 ylabel('Normalized Max - Min voltage (mV)', 'FontWeight', 'bold')
-xlabel('Time of measurement','FontWeight','bold')
-xtips = b.XEndPoints;
-ytips = b.YEndPoints;
-labels = string(b.YData);
-text(xtips,ytips,labels,'HorizontalAlignment','center','VerticalAlignment','bottom')
-xticklabels(times)
+xlabel('Animal','FontWeight','bold')
+xtips = vertcat(h.XEndPoints)';
+ytips = vertcat(h.YEndPoints)';
+text(xtips(:),ytips(:),compose('%.2f',ytips(:)),'HorizontalAlignment','center','VerticalAlignment','bottom');
 set(gca,'FontSize', 13)
-title({'Maximum peak-to-trough amplitudes', 'Measured at left extensor carpi radialis (LECR)'})
+title({'Maximum peak-to-trough amplitudes', 'Measured at right tibialis flexor (RTF)'})
 
 
 

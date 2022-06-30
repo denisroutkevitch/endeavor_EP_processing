@@ -5,7 +5,7 @@ hold on
 traces = [];
 times = {};
 
-var = s9_9;
+var = s10_14;
 for i = 1:length(var)
     if (isempty(var(i).MEP) == 0) && (isempty(var(i).MEP(6).C1) == 0)
         traces(:,end+1) = var(i).MEP(6).C1;
@@ -38,8 +38,8 @@ xlim([40, 90])
 yticks(flip(traces(1,:)))
 yticklabels(flip(times))
 set(gca,'FontSize', 13);
-title({'MEP signal traces measured from the', 'left extensor carpi radialis (LECR)'})
-set(gcf,'Position',[0 0 300 300])
+title({'MEP signal traces measured from the', 'right tibialis flexor (RTF)'})
+set(gcf,'Position',[0 0 400 400])
 
 hold off 
 

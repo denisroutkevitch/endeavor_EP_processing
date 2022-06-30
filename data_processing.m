@@ -1,6 +1,6 @@
 clear all, close all
 
- file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig 1111');
+ file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig 011322');
 %file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
 
 bexfiles = dir(fullfile(file,'*.bex'));
