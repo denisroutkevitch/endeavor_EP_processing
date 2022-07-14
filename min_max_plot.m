@@ -1,23 +1,26 @@
 %% min/max analysis
 
 
-post_stim = floor(max(size(traces,1)) * .6);
+detect_start = floor(max(size(traces,1)) * .57);
+detect_end = floor(max(size(traces,1)) * .7);
 dist = [];
 figure(1)
 %select correct data for analysis
 hold on
 
 for i = 1:size(traces,2)
-    [Mpks, ~] = findpeaks(traces(post_stim : end,i),'MinPeakDistance', 50);
+    [Mpks, ~] = findpeaks(traces(detect_start : detect_end,i),'MinPeakDistance', 50);
     M = max(Mpks);
-    plot(t(find(traces(:,i) == M)), M, 'r*')
-    [mpks, ~] = findpeaks(-traces(post_stim : end,i),'MinPeakDistance', 50);
+    all_pts = find(traces(:,i) == M);
+    plot(t(all_pts(all_pts >= detect_start & all_pts <= detect_end)), M, 'r*')
+
+    [mpks, ~] = findpeaks(-traces(detect_start : detect_end,i),'MinPeakDistance', 50);
     m = max(mpks);
-    plot(t(find(traces(:,i) == -m)), -m, 'r*')
+    all_pts = find(traces(:,i) == -m);
+    plot(t(all_pts(all_pts >= detect_start & all_pts <= detect_end)), -m, 'r*')
     dist(end+1) = M + m;
 end
 hold off
-
 figure(2)
 ndist = (dist-min(dist)) ./ (max(dist)-min(dist));
 cats = categorical(times);
@@ -36,7 +39,7 @@ title({'Maximum peak-to-trough amplitudes', 'Measured at right tibialis flexor (
 
 drop = find(dist == min(dist));
 
-%% multi-pig
+%% multi-pig drop range
 
 if drop == 1
     drop_range = [drop_range;-1, dist(drop + 1), dist(drop + 1)];
@@ -46,7 +49,7 @@ else
     drop_range = [drop_range;dist(drop - 1), dist(drop), dist(drop + 1)];
 end
 
-%%
+%% recovery plot
 figure(3);
 cats = categorical({'Pig 1 (9/30)', 'Pig 2 (10/14)', 'Pig 3 (10/21)', 'Pig 4 (11/4)'});
 cats = reordercats(cats,{'Pig 1 (9/30)', 'Pig 2 (10/14)', 'Pig 3 (10/21)', 'Pig 4 (11/4)'});
