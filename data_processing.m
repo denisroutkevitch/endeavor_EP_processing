@@ -1,7 +1,7 @@
 clear all, close all
 
  file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig 011322');
-%file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
+% file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
 
 bexfiles = dir(fullfile(file,'*.bex'));
 txtfiles = dir(fullfile(file,'*.txt'));
@@ -400,13 +400,13 @@ figure(1)
 hold on
 
 for i = 1:size(traces,2)
-    [Mpks, ~] = findpeaks(traces(post_stim : end,i),'MinPeakDistance', 50);
-    M = max(Mpks);
-    plot(t(find(traces(:,i) == M)), M, 'r*')
-    [mpks, ~] = findpeaks(-traces(post_stim : end,i),'MinPeakDistance', 50);
-    m = max(mpks);
-    plot(t(find(traces(:,i) == -m)), -m, 'r*')
-    dist(end+1) = M + m;
+    [Mpks, inds] = findpeaks(traces(post_stim : end,i),'MinPeakDistance', 50);
+    [M, MI] = max(Mpks);
+    plot(t(post_stim+inds(MI)), M, 'r*')
+    [mpks, inds] = findpeaks(-traces(post_stim : end,i),'MinPeakDistance', 50);
+    [m, mi] = max(mpks);
+    plot(t(post_stim+inds(mi)), -m, 'r*')
+    dist(i,2) = M + m;
 end
 hold off
 
