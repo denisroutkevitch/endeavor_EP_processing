@@ -29,7 +29,7 @@ for i = 1: size(traces,2) - 1
 end
 
 
-t = 0:100/max(size(traces,1)): 99.99;
+t = 0:100/max(size(traces,1)):99.99;
 plot(t, traces, 'Color', 'Black', 'LineWidth', 1.7)
 xlabel('Time (ms)','FontWeight', 'bold')
 ylabel('Time of measurement','FontWeight','bold')
