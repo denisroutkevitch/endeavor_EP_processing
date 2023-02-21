@@ -1,7 +1,7 @@
 clear all, close all
 
 %  file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig 011322');
-fpath = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\220726 Arjun EP Round 1';
+fpath = 'E:\Data\220805 Arjun EP Round 3';
 
 EPstruct = dir(fullfile(fpath,'Raw','*.bex'));
 % txtfiles = dir(fullfile(fpath,'*.txt'));
@@ -46,7 +46,8 @@ times = {};
 
 s = EPstruct;
 
-for i = 1:length(s)
+for i = ceil(length(s)/2):length(s)
+    
         tracesUL(:,end+1) = s(i).UL_MEP;
         tracesLL(:,end+1) = -s(i).LL_MEP;
         times{end+1} = s(i).name;
@@ -117,7 +118,7 @@ for i = 1:size(tracesUL,2)
     [mpks, inds] = findpeaks(-tracesUL(post_stim : end,i),'MinPeakDistance', 50);
     [m, mi] = max(mpks);
     plot(t(post_stim+inds(mi)), -m, 'r*')
-    dist(i,2) = M + m;
+    dist(i,1) = M + m;
 end
 hold off
 
