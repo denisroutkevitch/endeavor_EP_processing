@@ -1,6 +1,6 @@
 clear all, close all
 
- file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig 011322');
+ file = "D:\Data\230720 Pig EP";
 % file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
 
 bexfiles = dir(fullfile(file,'*.bex'));
@@ -155,12 +155,12 @@ for i = 1:min(length(bexfiles),length(txtfiles))
                                 s(i).D = s(1).D;
                             end
 
-                            place = find(contains(d_order, 'ros'));
+                            place = find(contains(d_order, 'ros', 'IgnoreCase',true));
                             s(i).D(1).C1 = data(:,place);
                             sensitivity = regexp(d_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).D(1).C1_sensitivity = sensitivity{1};
 
-                            place = find(contains(d_order, 'cau'));
+                            place = find(contains(d_order, 'cau', 'IgnoreCase',true));
                             s(i).D(2).C1 = data(:,place);
                             sensitivity = regexp(d_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).D(2).C1_sensitivity = sensitivity{1};
@@ -181,12 +181,12 @@ for i = 1:min(length(bexfiles),length(txtfiles))
                                 s(i).D = s(1).D;
                             end
 
-                            place = find(contains(d_order, 'ros'));
+                            place = find(contains(d_order, 'ros', 'IgnoreCase',true));
                             s(i).D(1).C2 = data(:,place);
                             sensitivity = regexp(d_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).D(1).C2_sensitivity = sensitivity{1};
 
-                            place = find(contains(d_order, 'cau'));
+                            place = find(contains(d_order, 'cau', 'IgnoreCase',true));
                             s(i).D(2).C2 = data(:,place);
                             sensitivity = regexp(d_sensitivity{place}, 'Sensitivity:(\d+\s*\D+)','tokens');
                             s(i).D(2).C2_sensitivity = sensitivity{1};
@@ -344,17 +344,17 @@ for i = 1:length(s)
         seconds(duration(base, 'InputFormat', 'hh:mm'));
 end
 
-
 %% MEPs stacking
 
-close all
+% close all
+figure
 hold on
 traces = [];
 times = {};
 
-for i = 10:length(s)
-    if (isempty(s(i).MEP) == 0) && (isempty(s(i).MEP(6).C1) == 0)
-        traces(:,end+1) = s(i).MEP(6).C1;
+for i = 1:length(s)
+    if (isempty(s(i).MEP) == 0) && (isempty(s(i).MEP(4).C1) == 0)
+        traces(:,end+1) = s(i).MEP(4).C1;
         times{end+1} = s(i).String_Time;
     end
 end
@@ -370,7 +370,7 @@ for i = 1:length(times)
 end
 
 for i = 1: size(traces,2) - 1
-    dist = min(traces(:,i)) - max(traces(:,i+1));
+    dist = min(traces(700:end,i)) - max(traces(700:end,i+1));
     traces(:,i+1) = traces(:,i+1) + dist - 50;
 end
 
@@ -384,7 +384,8 @@ xlim([40, 90])
 yticks(flip(traces(1,:)))
 yticklabels(flip(times))
 set(gca,'FontSize', 13);
-title({'MEP signal traces measured from the', 'left extensor carpi radialis (LECR)'})
+%title({'MEP signal traces measured from the', 'left extensor carpi radialis (LECR)'})
+title({'SSEP signal traces measured from the Legs', 'Cervical'})
 set(gcf,'Position',[0 0 300 300])
 
 hold off 
@@ -393,17 +394,17 @@ hold off
 %% min/max analysis
 
 
-post_stim = floor(max(size(traces,1)) * .6);
+post_stim = floor(max(size(traces,1)) * .5);
 dist = [];
 figure(1)
 %select correct data for analysis
 hold on
 
 for i = 1:size(traces,2)
-    [Mpks, inds] = findpeaks(traces(post_stim : end,i),'MinPeakDistance', 50);
+    [Mpks, inds] = findpeaks(traces(post_stim : end,i),'MinPeakDistance', 60);
     [M, MI] = max(Mpks);
     plot(t(post_stim+inds(MI)), M, 'r*')
-    [mpks, inds] = findpeaks(-traces(post_stim : end,i),'MinPeakDistance', 50);
+    [mpks, inds] = findpeaks(-traces(post_stim : end,i),'MinPeakDistance', 60);
     [m, mi] = max(mpks);
     plot(t(post_stim+inds(mi)), -m, 'r*')
     dist(i,2) = M + m;

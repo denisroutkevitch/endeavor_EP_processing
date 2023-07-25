@@ -1,9 +1,11 @@
 clear all, close all
 
 %  file = fullfile('/','Users','nickats','Desktop','porcine_spinal_chord_project','pig data processing','pig 011322');
-fpath = 'E:\Data\220805 Arjun EP Round 3';
+% fpath = 'E:\Data\220805 Arjun EP Round 3';
+fpath = "D:\Data\230712 Angelica MEPs\Binary Files";
 
-EPstruct = dir(fullfile(fpath,'Raw','*.bex'));
+% EPstruct = dir(fullfile(fpath,'Raw','*.bex'));
+EPstruct = dir(fullfile(fpath,'*.bex'));
 % txtfiles = dir(fullfile(fpath,'*.txt'));
 
 
@@ -35,8 +37,8 @@ save(fullfile(fpath, 'EP_sorted.mat'), 'EPstruct');
 
 %% MEPs stacking
 
-close all
-figure
+close(figure(1))
+set(figure(1), 'Position', [1,49,1280,899]);
 hold on
 % setappdata(gcf, 'SubplotDefaultAxesLocation', [0, 0, 1, 1]);
 getappdata(gcf, 'SubplotDefaultAxesLocation')
@@ -46,7 +48,7 @@ times = {};
 
 s = EPstruct;
 
-for i = ceil(length(s)/2):length(s)
+for i = 2:length(s) %ceil(length(s)/2):length(s)
     
         tracesUL(:,end+1) = s(i).UL_MEP;
         tracesLL(:,end+1) = -s(i).LL_MEP;
@@ -63,12 +65,12 @@ end
 %     times{i} = datestr(duration(formatted, 'InputFormat', 'hh:mm'), 'HH:MM');
 % end
 
-ratio = max(tracesUL(:))/max(tracesLL(:));
+ratio = max(tracesUL(550:end))/max(tracesLL(550:end));
 
 for i = 1: size(tracesUL,2) - 1
-    dist = min(tracesUL(:,i)) - max(tracesUL(:,i+1));
-    tracesUL(:,i+1) = tracesUL(:,i+1) + dist - 50;
-    tracesLL(:,i+1) = ratio*tracesLL(:,i+1) + dist - 50;
+    dist = min(tracesUL(550:end,i)) - max(tracesUL(550:end,i+1));
+    tracesUL(:,i+1) = tracesUL(:,i+1) + dist - 5;
+    tracesLL(:,i+1) = ratio*tracesLL(:,i+1) + dist - 5;
 end
 
 % for i = 1: size(tracesLL,2) - 1
@@ -80,7 +82,7 @@ t = 0:100/max(size(tracesLL,1)): 99.99;
 subplot(1,2,1), plot(t, tracesUL, 'Color', 'Black', 'LineWidth', 1.7);
 xlabel('Time (ms)','FontWeight', 'bold')
 ylabel('Time of measurement (file name, seconds)','FontWeight','bold')
-ylim([min(min(tracesUL))-100, max(max(tracesUL))+100])
+ylim([min(min(tracesUL))-5, max(max(tracesUL))+5])
 xlim([40, 90])
 yticks(flip(tracesUL(1,:)));
 yticklabels(flip(times))
@@ -89,15 +91,15 @@ title({'UL MEPs'})
 
 subplot(1,2,2), plot(t, tracesLL, 'Color', 'Black', 'LineWidth', 1.7)
 xlabel('Time (ms)','FontWeight', 'bold')
-ylim([min(min(tracesUL))-100, max(max(tracesUL))+100])
+ylim([min(min(tracesUL))-5, max(max(tracesUL))+5])
 xlim([40, 90])
 set(gca,'YTickLabel',[]);
 yticks(flip(tracesLL(1,:)));
-yticklabels(flip({EPstruct.time}));
+yticklabels(flip(times));
 set(gca,'FontSize', 13);
 title({'LL MEPs'})
 
-set(gcf,'Position',[2211,75,1051,1154])
+% set(gcf,'Position',[2211,75,1051,1154])
 hold off 
 
 
@@ -174,8 +176,9 @@ ytips = b.YEndPoints;
 labels = string(round(b.YData, 2));
 text(ytips+0.05, xtips,labels,'HorizontalAlignment','left','VerticalAlignment','middle')
 set(gca,'YTickLabel',[]);
-% yticks(1:length(times))
+yticks(1:length(times))
 % yticklabels(times)
+yticklabels(flip(times))
 set(gca,'FontSize', 13)
 title({'LL MEP Norm. Amplitudes'})
 
