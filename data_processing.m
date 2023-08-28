@@ -1,9 +1,10 @@
 clear all, close all
 
- file = "D:\Data\230720 Pig EP";
+ file = "C:\Users\abche\Desktop\230720 Pig EP";
 % file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
 
 bexfiles = dir(fullfile(file,'*.bex'));
+
 txtfiles = dir(fullfile(file,'*.txt'));
 
 %classification identifiers
@@ -15,7 +16,7 @@ C2_pat = ["C2", "c2"];
 arms_pat = ["arm", "Arm", "arms", "Arms", "median", "Median"];
 legs_pat = ["leg", "Leg", "legs", "Legs", "tibial", "Tibial"];
 
-load("Sample Structure.mat")
+load("C:\Users\abche\Desktop\endeavor_EP_processing-main\Sample Structure.mat")
 
 String_Time = {};
 failedsorts = {}; %deposit of data files that weren't able to be sorted by algorithm
@@ -352,9 +353,10 @@ hold on
 traces = [];
 times = {};
 
-for i = 1:length(s)
-    if (isempty(s(i).MEP) == 0) && (isempty(s(i).MEP(4).C1) == 0)
-        traces(:,end+1) = s(i).MEP(4).C1;
+
+for i = 30:length(s)
+    if (isempty(s(i).SSEP) == 0) && (isempty(s(i).SSEP(8).Legs) == 0)
+        traces(:,end+1) = s(i).SSEP(8).Legs;
         times{end+1} = s(i).String_Time;
     end
 end
@@ -369,9 +371,10 @@ for i = 1:length(times)
     times{i} = datestr(duration(formatted, 'InputFormat', 'hh:mm'), 'HH:MM');
 end
 
+%Reformat so its variable between each one see !data_process_rat!
 for i = 1: size(traces,2) - 1
-    dist = min(traces(700:end,i)) - max(traces(700:end,i+1));
-    traces(:,i+1) = traces(:,i+1) + dist - 50;
+    dist = min(traces(1:end,i)) - max(traces(1:end,i+1));
+    traces(:,i+1) = traces(:,i+1) + dist - 5;
 end
 
 
@@ -379,32 +382,177 @@ t = 0:100/max(size(traces,1)): 99.99;
 plot(t, traces, 'Color', 'Black', 'LineWidth', 1.7)
 xlabel('Time (ms)','FontWeight', 'bold')
 ylabel('Time of measurement','FontWeight','bold')
-ylim([min(min(traces))-100, max(max(traces))+100])
+ylim([min(min(traces))-10, max(max(traces))+10])
 xlim([40, 90])
 yticks(flip(traces(1,:)))
 yticklabels(flip(times))
 set(gca,'FontSize', 13);
 %title({'MEP signal traces measured from the', 'left extensor carpi radialis (LECR)'})
-title({'SSEP signal traces measured from the Legs', 'Cervical'})
+title({'MEP signal traces measured from the', "RTF-RTF2"})
 set(gcf,'Position',[0 0 300 300])
 
 hold off 
+
+%% SSEP Conversion
+
+
+%%%1-801 for first trace and 803-1603 for second
+
+% Loop between all traces and does first minus the second 
+
+traces_ssep = [];
+select = [6,40,114, 118,119,129,157];
+for i = 1:size(traces,2)
+    traces_ssep(:,end+1) = traces((1:801), i) - traces((803:1603), i);
+
+    %plot(traces);
+    %plot(traces(1:inds(MI)));
+
+    %plot(t(inds(MI)), M, '*r');
+    %plot(t(inds(MI)), M, 'r*');
+    %[mpks, inds] = findpeaks(-traces(1: end,i),'MinPeakDistance', 10);
+    %[m, mi] = max(mpks);
+    %plot(t(inds(mi)), -m, 'r*')
+
+end
+
+% for i = 1: size(traces_ssep,2) - 1
+    % syms x
+    % eqn = min(traces_ssep(:,i)) - max(traces_ssep(:,i+1)) + 1 + x == 0;
+    % solx = solve(eqn, x);
+    %dist = min(traces_ssep(:,i)) - max(traces(:,i+1));
+    % traces_ssep(:,i+1) = traces_ssep(:,i+1) - solx;
+% end
+select_traces_ssep = [];
+select_times = {};
+for i= 1:length(select)
+    select_traces_ssep(:,end+1) = traces_ssep(:,select(i));
+    select_times(end+1) =  times(select(i));
+end
+
+select_traces_ssep = fliplr(select_traces_ssep);
+select_times = fliplr(select_times);
+for i = 1: size(select_traces_ssep,2)-1
+    syms x
+    eqn = min(select_traces_ssep(350:end,i+1)) - max(select_traces_ssep(350:end,i)) -2 + x == 0;
+    solx = solve(eqn, x);
+    select_traces_ssep(:,i+1) = select_traces_ssep(:,i+1) + solx;
+end
+
+figure(1);
+set(gca, 'LineWidth',1.5);
+set(gca, 'FontWeight', 'bold');
+hold on
+t = 0:100/max(size(select_traces_ssep,1)): 99.99;
+plot(t, select_traces_ssep, 'Color', 'Black', 'LineWidth', 1.7);
+xlabel('Time (ms)','FontWeight', 'bold')
+ylabel('Time of measurement','FontWeight','bold')
+ylim([min(min(select_traces_ssep)), max(max(select_traces_ssep))])
+xlim([3, 50])
+yticks((select_traces_ssep(25,:)))
+yticklabels((select_times))
+set(gca,'FontSize', 13);
+title({'SSEP Cervical Legs'})
+set(gcf,'Position',[0 0 300 300])
+
+% hold off
+
+dist = [];
+
+%select correct data for analysis
+% hold on
+post_stim = 20;
+for i = 1:size(traces_ssep,2)
+% for i = 1:size(select_traces_ssep,2)
+    [mpks, inds] = findpeaks(-traces_ssep(post_stim : 350,i),'MinPeakDistance', 10);
+    % [mpks, inds] = findpeaks(-select_traces_ssep(post_stim : 350,i),'MinPeakDistance', 10);
+
+    
+    [m, mi] = max(mpks);
+    index_min = post_stim+inds(mi);
+    % plot(t(index_min), -m, 'r*')
+
+    [Mpks, inds] = findpeaks(traces_ssep(index_min : 390,i),'MinPeakDistance', 10);
+    % [Mpks, inds] = findpeaks(select_traces_ssep(index_min : 390,i),'MinPeakDistance', 10);
+    [M, MI] = max(Mpks);
+    % plot(t(index_min + inds(MI)), M, 'r*')
+
+    if(isempty(M))
+        M = traces_ssep(390,i);
+        % M = select_traces_ssep(390,i);
+    end
+
+    dist(i) = M + m;
+end
+
+hold off
+
+ticks = [];
+minute_time = [];
+%Convert time to minutes
+for i = 1:size(times,2)
+    cell = times(1,i);
+    str_temp = string(cell);
+    str_temp1= erase(str_temp,":");
+    num_temp = str2num(str_temp1);
+
+    r = rem(num_temp,10);
+    mintues = r;
+    num_temp = num_temp-r;
+    r = rem(num_temp,100);
+    mintues = mintues +r;
+    num_temp = (num_temp-r)/100;
+    minutes = mintues+ num_temp*60;
+
+    % Time of first recording
+    minutes = minutes - 780;
+
+    minute_time(end+1) = minutes;
+    
+end
+
+time_labels={};
+for i = 1:size(times,2)
+    if (rem(i,20)==1)
+        time_labels(end+1) = times(1,i);
+        ticks(end+1) = i;
+    end
+end
+
+% Plot in minutes for x and amplitude in Y
+figure(2);
+set(gca, 'LineWidth',1.5);
+set(gca, 'FontWeight', 'bold');
+hold on
+t = 0:100/max(size(dist,1)): 99.99;
+plot(dist, 'Color', 'Black', 'LineWidth', 1.7);
+xlabel('Time (minutes)','FontWeight', 'bold')
+ylabel('Amplitude','FontWeight','bold')
+ylim([min(min(dist))-1, max(max(dist))+1])
+xlim([1, 160])
+xticks(ticks)
+xticklabels(time_labels)
+set(gca,'FontSize', 13);
+title({'SSEP Cervical Legs Amplitude'})
+set(gcf,'Position',[0 0 300 300])
 
 
 %% min/max analysis
 
 
 post_stim = floor(max(size(traces,1)) * .5);
+
+
 dist = [];
 figure(1)
 %select correct data for analysis
 hold on
 
 for i = 1:size(traces,2)
-    [Mpks, inds] = findpeaks(traces(post_stim : end,i),'MinPeakDistance', 60);
+    [Mpks, inds] = findpeaks(traces(post_stim : end,i),'MinPeakDistance', 10);
     [M, MI] = max(Mpks);
     plot(t(post_stim+inds(MI)), M, 'r*')
-    [mpks, inds] = findpeaks(-traces(post_stim : end,i),'MinPeakDistance', 60);
+    [mpks, inds] = findpeaks(-traces(post_stim : end,i),'MinPeakDistance', 10);
     [m, mi] = max(mpks);
     plot(t(post_stim+inds(mi)), -m, 'r*')
     dist(i,2) = M + m;
@@ -414,6 +562,7 @@ hold off
 figure(2)
 dist = (dist-min(dist)) ./ (max(dist)-min(dist));
 cats = categorical(times);
+
 b = bar(cats,dist,'FaceColor', 'flat');
 
 ylabel('Normalized Max - Min voltage (mV)', 'FontWeight', 'bold')
@@ -421,7 +570,8 @@ xlabel('Time of measurement','FontWeight','bold')
 ylim([0 1.1])
 xtips = b.XEndPoints;
 ytips = b.YEndPoints;
-labels = string(round(b.YData, 2));
+labels = String(b.YData);
+%labels = string(round((b.YData), 2));
 text(xtips,ytips,labels,'HorizontalAlignment','center','VerticalAlignment','bottom')
 xticklabels(times)
 set(gca,'FontSize', 13)
