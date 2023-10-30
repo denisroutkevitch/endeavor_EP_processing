@@ -1,7 +1,9 @@
 clear all, close all
 
- file = "C:\Users\abche\Desktop\230720 Pig EP";
+
+% file = "D:\Data\230720 Pig EP";
 % file = 'C:\Users\Denis\Documents\JHSOM\PhD\Data\211021 Pig EP sample\pig 1021';
+file = "C:\Users\Denis\OneDrive - Johns Hopkins\NT Research 2023\HEPIUS\Pig\Experiments\2023\2023_10_27 Pig FUS experiments\EP\231026_143103\10262023\";
 
 bexfiles = dir(fullfile(file,'*.bex'));
 
@@ -25,8 +27,14 @@ failedsorts = {}; %deposit of data files that weren't able to be sorted by algor
 for i = 1:min(length(bexfiles),length(txtfiles))
     btemp = bexfiles(i).name;
     ttemp = txtfiles(i).name;
+    
     if isempty(regexp(btemp,'\d\d+','match')) ~= 1
-        to_format = char(regexp(btemp,'\d\d+','match'));
+        if contains(btemp, '-2')
+            to_format = [char(regexp(btemp,'\d\d+','match')), '-2'];
+        else
+            to_format = char(regexp(btemp,'\d\d+','match'));
+        end
+
         if any(strcmp(to_format, {s.String_Time})) == 0
             s(end+1).String_Time = to_format;
             s(end).MEP = [];
@@ -146,7 +154,7 @@ for i = 1:min(length(bexfiles),length(txtfiles))
         if any(check) == 1
             d_order = {meta{1,1}{1}, meta{1,1}{10}};
             d_sensitivity = {meta{1,1}{3}, meta{1,1}{12}};
-            if contains(btemp,C1_pat) == 1
+            if contains(btemp,C1_pat) == 1 || contains(btemp, 'D wave')
                 for i = 3:length(s)
                     if contains(btemp, s(i).String_Time)
                         try
@@ -332,7 +340,7 @@ if length(s(1).String_Time) == 3
 end
 base = insertAfter(s(1).String_Time,length(s(1).String_Time)-2,':');
 
-%fill in Time field
+%% fill in Time field
 
 for i = 1:length(s)
     if length(s(i).String_Time) == 3
@@ -340,26 +348,73 @@ for i = 1:length(s)
     else
         to_format = s(i).String_Time;
     end
-    formatted = insertAfter(to_format,length(to_format)-2,':');
-    s(i).Time = seconds(duration(formatted, 'InputFormat', 'hh:mm')) - ...
-        seconds(duration(base, 'InputFormat', 'hh:mm'));
+
+    if length(to_format) == 4
+        formatted = [insertAfter(to_format,length(to_format)-2,':'), ' 20231026'];
+        s(i).Time = datetime(formatted, 'InputFormat', 'HH:mm yyyyMMdd');
+%         - seconds(duration(base, 'InputFormat', 'hh:mm'));
+    else
+        formatted = [insertAfter(to_format(1:4),2,':'), ':30 20231026'];
+        s(i).Time = datetime(formatted, 'InputFormat', 'HH:mm:ss yyyyMMdd');
+%         - seconds(duration(base, 'InputFormat', 'hh:mm'));
+    end
 end
 
 %% MEPs stacking
 
+mpd = 30;
+mpp = 0.0005;
+dscale = 0.3;
+
+trange = [65 80];
+windloc = [55 90];
+tickloc = 70;
+
+EP_type = 'D';
+stim_site = 'C1';
+rec_loc = 1;
+
+% analysrange = [65 72];
+analysrange = [59 65];
+
+% trange = [65 80];
+% windloc = [55 90];
+% tickloc = 57;
+% 
+% EP_type = 'MEP';
+% stim_site = 'C2';
+% rec_loc = 5;
+
+
+
 % close all
-figure
+try close(figure(1))
+end
+
+figure(1)
+set(figure(1), 'Position', [32,58,511,868])
 hold on
 traces = [];
+taxis = datetime([],[],[]);
 times = {};
 
 
-for i = 30:length(s)
-    if (isempty(s(i).SSEP) == 0) && (isempty(s(i).SSEP(8).Legs) == 0)
-        traces(:,end+1) = s(i).SSEP(8).Legs;
+for i = 1:length(s)
+    EP_struct = s(i).(EP_type);
+    if (isempty(EP_struct) == 0) && isempty(EP_struct(rec_loc).(stim_site)) == 0
+        try
+            traces(:,end+1) = EP_struct(rec_loc).(stim_site);
+        catch
+            traces(:,end+1) = [EP_struct(rec_loc).(stim_site);0];
+        end
+
         times{end+1} = s(i).String_Time;
+        taxis(end+1) = s(i).Time;
+        fieldn = fieldnames(EP_struct);
+        rec_loc_string = EP_struct(rec_loc).(fieldn{1});
     end
 end
+
 
 for i = 1:length(times)
     if length(times{i}) == 3
@@ -371,25 +426,44 @@ for i = 1:length(times)
     times{i} = datestr(duration(formatted, 'InputFormat', 'hh:mm'), 'HH:MM');
 end
 
-%Reformat so its variable between each one see !data_process_rat!
+
+t = 0:100/max(size(traces,1)): 99.99;
+
+
+[~,ind1] = min(abs(t-trange(1)));
+[~,ind2] = min(abs(t-trange(2)));
+
+
+[~,aind1] = min(abs(t-analysrange(1)));
+[~,aind2] = min(abs(t-analysrange(2)));
+
+
+[~,windind] = min(abs(t-tickloc));
+
+% dist =  max(traces(963:1200,:), [], 'all') - min(traces(963:1200,:), [], 'all');
+dist =  max(traces(ind1:ind2,:), [], 'all') - min(traces(ind1:ind2,:), [], 'all');
 for i = 1: size(traces,2) - 1
-    dist = min(traces(1:end,i)) - max(traces(1:end,i+1));
-    traces(:,i+1) = traces(:,i+1) + dist - 5;
+    
+    traces(:,i+1) = traces(:,i+1) - i*(dscale*dist);
 end
 
 
-t = 0:100/max(size(traces,1)): 99.99;
+
 plot(t, traces, 'Color', 'Black', 'LineWidth', 1.7)
 xlabel('Time (ms)','FontWeight', 'bold')
 ylabel('Time of measurement','FontWeight','bold')
-ylim([min(min(traces))-10, max(max(traces))+10])
-xlim([40, 90])
-yticks(flip(traces(1,:)))
+
+ylim([min(traces(aind1:aind2,:),[],'all')-dscale*dist, max(traces(aind1:aind2,:),[],'all')+3]+dscale*dist)
+xlim(windloc)
+title(sprintf('%s %s %s', EP_type, stim_site, rec_loc_string))
+yticks(flip(traces(windind,:)))
 yticklabels(flip(times))
 set(gca,'FontSize', 13);
 %title({'MEP signal traces measured from the', 'left extensor carpi radialis (LECR)'})
-title({'MEP signal traces measured from the', "RTF-RTF2"})
-set(gcf,'Position',[0 0 300 300])
+% title({'SSEP signal traces measured from the Legs', 'Cervical'})
+
+% set(gcf,'Position',[0 0 300 300])
+
 
 hold off 
 
@@ -537,28 +611,56 @@ title({'SSEP Cervical Legs Amplitude'})
 set(gcf,'Position',[0 0 300 300])
 
 
-%% min/max analysis
-
-
-post_stim = floor(max(size(traces,1)) * .5);
-
+% min/max analysis
 
 dist = [];
 figure(1)
+
 %select correct data for analysis
 hold on
 
 for i = 1:size(traces,2)
-    [Mpks, inds] = findpeaks(traces(post_stim : end,i),'MinPeakDistance', 10);
+
+    [Mpks, inds] = findpeaks(traces(aind1 : aind2,i),'MinPeakDistance', mpd, 'MinPeakProminence',mpp);
     [M, MI] = max(Mpks);
-    plot(t(post_stim+inds(MI)), M, 'r*')
-    [mpks, inds] = findpeaks(-traces(post_stim : end,i),'MinPeakDistance', 10);
+    plot(t(aind1+inds(MI)), M, 'r*')
+    [mpks, inds] = findpeaks(-traces(aind1 : aind2,i),'MinPeakDistance', mpd, 'MinPeakProminence',mpp);
+
     [m, mi] = max(mpks);
-    plot(t(post_stim+inds(mi)), -m, 'r*')
+    if i ==1
+        m = -traces(580,1);
+        inds(mi)= 580-aind1;
+    end
+    plot(t(aind1+inds(mi)), -m, 'r*')
     dist(i,2) = M + m;
 end
 hold off
 
+dist = (dist-min(dist)) ./ (max(dist)-min(dist));
+
+figure(2)
+set(figure(2), 'Position', [200 200 750, 185])
+plot(taxis, dist,'LineWidth', 1.5);
+xline(fus_on,'-','FUS On','LineWidth', 1.5)
+xline(fus_off,'-','FUS Off','LineWidth', 1.5)
+kl = xline(ket_on,'-','KETAMINE','LineWidth', 1.5);
+kl.LabelVerticalAlignment = 'bottom';
+
+set(gca, 'LineWidth', 1.5)
+set(gca,'FontWeight','bold')
+title(sprintf('%s %s %s', EP_type, stim_site, rec_loc_string))
+
+ylim([-0.1 1.1])
+ylabel({'Normalized Voltage', '(Max-Min)'})
+
+exportgraphics(figure(1), fullfile("C:\Users\Denis\OneDrive - Johns Hopkins\NT Research 2023\HEPIUS\Pig\Experiments\2023\2023_10_27 Pig FUS experiments",...
+                        sprintf('%s %s %s traces.png', EP_type, stim_site, rec_loc_string)));
+
+exportgraphics(figure(2), fullfile("C:\Users\Denis\OneDrive - Johns Hopkins\NT Research 2023\HEPIUS\Pig\Experiments\2023\2023_10_27 Pig FUS experiments",...
+                        sprintf('%s %s %s mag.png', EP_type, stim_site, rec_loc_string)));
+
+
+%%
 figure(2)
 dist = (dist-min(dist)) ./ (max(dist)-min(dist));
 cats = categorical(times);
